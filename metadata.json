@@ -1,0 +1,6 @@
+{
+  "name": "MeshChat",
+  "description": "Fully local offline peer-to-peer chat and file-sharing app using Nearby Connections.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#0D1117"
+        android:pathData="M0,0h108v108h-108z"/>
+    <!-- Cyberpunk mesh/chat bubble icon -->
+    <path
+        android:fillColor="#00F0FF"
+        android:pathData="M54,24C34.118,24 18,37.432 18,54c0,9.988 5.602,18.826 14.156,24.316C31.554,82.35 28.528,88 28.528,88c8.242,-1.034 16.038,-5.474 20.306,-9.362C50.536,78.874 52.254,79 54,79c19.882,0 36,-13.432 36,-25S73.882,24 54,24Z" />
+    <path
+        android:fillColor="#9D4EDD"
+        android:pathData="M38,44 A4,4 0 0 1 46,44 A4,4 0 0 1 38,44 Z M50,56 A4,4 0 0 1 58,56 A4,4 0 0 1 50,56 Z M62,44 A4,4 0 0 1 70,44 A4,4 0 0 1 62,44 Z" />
+    <path
+        android:strokeColor="#9D4EDD"
+        android:strokeWidth="2"
+        android:pathData="M42,44 L54,56 L66,44" />
+</vector>

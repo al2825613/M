@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cyber_bg"
+    android:padding="16dp">
+
+    <!-- Header -->
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_launcher_foreground"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/cyber_primary"
+        android:layout_marginStart="16dp"
+        app:layout_constraintTop_toTopOf="@id/ivLogo"
+        app:layout_constraintBottom_toBottomOf="@id/ivLogo"
+        app:layout_constraintStart_toEndOf="@id/ivLogo"/>
+
+    <!-- Nickname Input -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilNickname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        app:boxStrokeColor="@color/cyber_primary"
+        android:textColorHint="@color/cyber_text"
+        app:boxBackgroundColor="@color/cyber_card"
+        app:layout_constraintTop_toBottomOf="@id/ivLogo">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etNickname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nickname"
+            android:textColor="@color/cyber_text"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Controls -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAdvertise"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Start Advertising"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        app:backgroundTint="@color/cyber_primary"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toBottomOf="@id/tilNickname"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnDiscover" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDiscover"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Start Discovery"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="8dp"
+        app:backgroundTint="@color/cyber_secondary"
+        android:textColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/tilNickname"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btnAdvertise" />
+
+    <TextView
+        android:id="@+id/tvState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/offline"
+        android:textColor="@color/cyber_text"
+        android:gravity="center"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/btnAdvertise" />
+
+    <!-- Discovered Devices -->
+    <TextView
+        android:id="@+id/tvDevicesHeading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Discovered Devices"
+        android:textColor="@color/cyber_primary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/tvState"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDevices"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tvDevicesHeading"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
