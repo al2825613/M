@@ -4,23 +4,44 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/cyber_bg"
-    android:padding="16dp">
+    android:background="@color/cyber_bg">
+
+    <!-- Status Banner Card -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cvStatusBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardBackgroundColor="@color/cyber_card"
+        app:layout_constraintTop_toTopOf="parent">
+        <TextView
+            android:id="@+id/tvStatusBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="Status: Local Offline Mesh"
+            android:textStyle="bold"
+            android:textColor="@color/cyber_secondary"
+            android:gravity="center"/>
+    </androidx.cardview.widget.CardView>
 
     <!-- Header -->
     <ImageView
         android:id="@+id/ivLogo"
         android:layout_width="48dp"
         android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
         android:src="@drawable/ic_launcher_foreground"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cvStatusBanner"
         app:layout_constraintStart_toStartOf="parent"/>
 
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
+        android:text="MeshChat Pro"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@color/cyber_primary"
@@ -34,7 +55,7 @@
         android:id="@+id/tilNickname"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_margin="16dp"
         app:boxStrokeColor="@color/cyber_primary"
         android:textColorHint="@color/cyber_text"
         app:boxBackgroundColor="@color/cyber_card"
@@ -44,66 +65,142 @@
             android:id="@+id/etNickname"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nickname"
+            android:hint="Custom Nickname"
             android:textColor="@color/cyber_text"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Controls -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnAdvertise"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Start Advertising"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
-        app:backgroundTint="@color/cyber_primary"
-        android:textColor="@color/black"
-        app:layout_constraintTop_toBottomOf="@id/tilNickname"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btnDiscover" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnDiscover"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Start Discovery"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="8dp"
-        app:backgroundTint="@color/cyber_secondary"
-        android:textColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/tilNickname"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btnAdvertise" />
-
-    <TextView
-        android:id="@+id/tvState"
+    <LinearLayout
+        android:id="@+id/llControls"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/offline"
-        android:textColor="@color/cyber_text"
-        android:gravity="center"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/btnAdvertise" />
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tilNickname">
 
-    <!-- Discovered Devices -->
-    <TextView
-        android:id="@+id/tvDevicesHeading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Discovered Devices"
-        android:textColor="@color/cyber_primary"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@id/tvState"
-        app:layout_constraintStart_toStartOf="parent" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAdvertise"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Advertise"
+            android:layout_marginEnd="8dp"
+            app:backgroundTint="@color/cyber_primary"
+            android:textColor="@color/black" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvDevices"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDiscover"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Discover"
+            android:layout_marginStart="8dp"
+            app:backgroundTint="@color/cyber_secondary"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+        <!-- QR Controls -->
+        <LinearLayout
+            android:id="@+id/llQrControls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@id/llControls">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnShowQr"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Show QR Profile"
+                android:layout_marginEnd="8dp"
+                app:backgroundTint="#2E2E2E"
+                android:textColor="@color/cyber_primary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScanQr"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Scan QR Profile"
+                android:layout_marginStart="8dp"
+                app:backgroundTint="#2E2E2E"
+                android:textColor="@color/cyber_secondary" />
+        </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/flContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/tvDevicesHeading"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/llQrControls"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation">
+        
+        <LinearLayout
+            android:id="@+id/viewDiscover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Recent Peers"
+                android:textColor="@color/cyber_primary"
+                android:textStyle="bold"/>
+            
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRecentPeers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+                
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Discovered Devices"
+                android:textColor="@color/cyber_primary"
+                android:textStyle="bold"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDevices"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="8dp"/>
+        </LinearLayout>
+        
+        <LinearLayout
+            android:id="@+id/viewGlobal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:padding="16dp"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Global World Chat Feature"
+                android:textColor="@color/cyber_text"
+                android:textAlignment="center"/>
+        </LinearLayout>
+    </FrameLayout>
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:menu="@menu/bottom_nav_menu"
+        android:background="@color/cyber_card"
+        app:itemIconTint="@color/cyber_primary"
+        app:itemTextColor="@color/cyber_text"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

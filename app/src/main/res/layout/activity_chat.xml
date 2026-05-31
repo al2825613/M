@@ -26,6 +26,17 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/switchSecret" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchSecret"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="Secret"
+            android:textColor="@color/cyber_text"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/btnDisconnect" />
 
         <ImageButton
@@ -89,6 +100,15 @@
                 android:textColor="@color/cyber_text"
                 android:textColorHint="#99E2E8F0"
                 android:maxLines="4" />
+
+            <ImageButton
+                android:id="@+id/btnAudio"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@android:drawable/ic_btn_speak_now"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="@color/cyber_secondary"
+                android:contentDescription="Hold to Talk" />
 
             <ImageButton
                 android:id="@+id/btnSend"

@@ -3,8 +3,10 @@ package com.example
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.R
 
 class MessageAdapter(private val messages: List<MessageModel>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -47,14 +49,31 @@ class MessageAdapter(private val messages: List<MessageModel>) :
     class SentMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvMessage: TextView = itemView.findViewById(R.id.tvMessage)
         private val tvTime: TextView = itemView.findViewById(R.id.tvTime)
+        private val ivStatus: ImageView = itemView.findViewById(R.id.ivStatus)
+        private val ivSelfDestruct: ImageView = itemView.findViewById(R.id.ivSelfDestruct)
 
         fun bind(message: MessageModel) {
-            if (message.type == MessageModel.TYPE_TEXT) {
+            if (message.isDestroyed) {
+                tvMessage.text = "🚫 Message destroyed"
+            } else if (message.type == MessageModel.TYPE_TEXT) {
                 tvMessage.text = message.text
+            } else if (message.type == MessageModel.TYPE_AUDIO) {
+                tvMessage.text = "🎤 Voice Message"
             } else {
-                tvMessage.text = "\uD83D\uDCC1 File Sent: ${message.fileUri?.lastPathSegment}"
+                tvMessage.text = "📁 File Sent: ${message.fileUri?.lastPathSegment}"
             }
             tvTime.text = message.timestamp
+
+            ivSelfDestruct.visibility = if (message.selfDestruct > 0) View.VISIBLE else View.GONE
+
+            if (message.status == MessageModel.STATUS_SENDING) {
+                ivStatus.setImageResource(android.R.drawable.ic_popup_sync)
+            } else if (message.status == MessageModel.STATUS_DELIVERED) {
+                ivStatus.setImageResource(android.R.drawable.checkbox_on_background)
+            } else if (message.status == MessageModel.STATUS_DECRYPTED) {
+                ivStatus.setImageResource(android.R.drawable.checkbox_on_background)
+                ivStatus.setColorFilter(android.graphics.Color.BLUE)
+            }
         }
     }
 
@@ -62,15 +81,22 @@ class MessageAdapter(private val messages: List<MessageModel>) :
         private val tvSenderName: TextView = itemView.findViewById(R.id.tvSenderName)
         private val tvMessage: TextView = itemView.findViewById(R.id.tvMessage)
         private val tvTime: TextView = itemView.findViewById(R.id.tvTime)
+        private val ivSelfDestruct: ImageView = itemView.findViewById(R.id.ivSelfDestruct)
 
         fun bind(message: MessageModel) {
             tvSenderName.text = message.senderName
-            if (message.type == MessageModel.TYPE_TEXT) {
+            if (message.isDestroyed) {
+                tvMessage.text = "🚫 Message destroyed"
+            } else if (message.type == MessageModel.TYPE_TEXT) {
                 tvMessage.text = message.text
+            } else if (message.type == MessageModel.TYPE_AUDIO) {
+                tvMessage.text = "🎤 Voice Message"
             } else {
-                tvMessage.text = "\uD83D\uDCC1 File Received: ${message.fileUri?.lastPathSegment}"
+                tvMessage.text = "📁 File Received: ${message.fileUri?.lastPathSegment}"
             }
             tvTime.text = message.timestamp
+            
+            ivSelfDestruct.visibility = if (message.selfDestruct > 0) View.VISIBLE else View.GONE
         }
     }
 }

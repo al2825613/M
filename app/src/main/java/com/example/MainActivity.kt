@@ -3,31 +3,30 @@ package com.example
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.nearby.Nearby
-import com.google.android.gms.nearby.connection.AdvertisingOptions
-import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
-import com.google.android.gms.nearby.connection.ConnectionResolution
-import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
-import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import com.google.android.gms.nearby.connection.DiscoveryOptions
-import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
-import com.google.android.gms.nearby.connection.Payload
-import com.google.android.gms.nearby.connection.PayloadCallback
-import com.google.android.gms.nearby.connection.PayloadTransferUpdate
-import com.google.android.gms.nearby.connection.Strategy
+import com.google.android.gms.nearby.connection.*
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.zxing.BarcodeFormat
+import com.journeyapps.barcodescanner.BarcodeEncoder
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,15 +36,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etNickname: EditText
     private lateinit var btnAdvertise: Button
     private lateinit var btnDiscover: Button
-    private lateinit var tvState: TextView
+    private lateinit var btnShowQr: Button
+    private lateinit var btnScanQr: Button
+    private lateinit var tvStatusBanner: TextView
     private lateinit var rvDevices: RecyclerView
+    private lateinit var rvRecentPeers: RecyclerView
+    private lateinit var bottomNavigation: BottomNavigationView
     
+    // Views
+    private lateinit var viewDiscover: android.view.View
+    private lateinit var viewGlobal: android.view.View
+
     private var myNickname: String = "User"
     private var isAdvertising = false
     private var isDiscovering = false
     
     private val discoveredDevices = mutableListOf<Pair<String, String>>()
     private lateinit var deviceAdapter: DeviceAdapter
+    private lateinit var recentPeerAdapter: RecentPeerAdapter
 
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
         if (permissions.values.all { it }) {
@@ -55,21 +63,47 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val qrScanLauncher = registerForActivityResult(ScanContract()) { result ->
+        if (result.contents != null) {
+            handleScannedQr(result.contents)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Init Core Managers
+        MeshStorage.init(this)
+        MeshCrypto.init()
+        NetworkManager.init(this)
+
         etNickname = findViewById(R.id.etNickname)
         btnAdvertise = findViewById(R.id.btnAdvertise)
         btnDiscover = findViewById(R.id.btnDiscover)
-        tvState = findViewById(R.id.tvState)
+        btnShowQr = findViewById(R.id.btnShowQr)
+        btnScanQr = findViewById(R.id.btnScanQr)
+        tvStatusBanner = findViewById(R.id.tvStatusBanner)
         rvDevices = findViewById(R.id.rvDevices)
+        rvRecentPeers = findViewById(R.id.rvRecentPeers)
+        bottomNavigation = findViewById(R.id.bottomNavigation)
+        viewDiscover = findViewById(R.id.viewDiscover)
+        viewGlobal = findViewById(R.id.viewGlobal)
+
+        etNickname.setText(MeshStorage.getNickname())
 
         deviceAdapter = DeviceAdapter(discoveredDevices) { endpointId ->
             connectToEndpoint(endpointId)
         }
         rvDevices.layoutManager = LinearLayoutManager(this)
         rvDevices.adapter = deviceAdapter
+
+        val recentPeers = MeshStorage.getRecentPeers()
+        recentPeerAdapter = RecentPeerAdapter(recentPeers) { endpointId, _ ->
+            connectToEndpoint(endpointId)
+        }
+        rvRecentPeers.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rvRecentPeers.adapter = recentPeerAdapter
 
         btnAdvertise.setOnClickListener {
             if (!isAdvertising) {
@@ -86,6 +120,116 @@ class MainActivity : AppCompatActivity() {
                 stopDiscovery()
             }
         }
+
+        btnShowQr.setOnClickListener {
+            showQrProfile()
+        }
+
+        btnScanQr.setOnClickListener {
+            val options = ScanOptions()
+            options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+            options.setPrompt("Scan Peer's MeshChat Profile UI")
+            options.setCameraId(0) // Use specific camera
+            options.setBeepEnabled(false)
+            qrScanLauncher.launch(options)
+        }
+
+        bottomNavigation.setOnItemSelectedListener { item ->
+            when(item.itemId) {
+                R.id.nav_discover -> {
+                    viewDiscover.visibility = android.view.View.VISIBLE
+                    viewGlobal.visibility = android.view.View.GONE
+                    true
+                }
+                R.id.nav_chats -> {
+                    Toast.makeText(this, "Active Chats coming soon", Toast.LENGTH_SHORT).show()
+                    false
+                }
+                R.id.nav_global -> {
+                    viewDiscover.visibility = android.view.View.GONE
+                    viewGlobal.visibility = android.view.View.VISIBLE
+                    // Launch a global room as an example
+                    val intent = Intent(this@MainActivity, ChatActivity::class.java).apply {
+                        putExtra("ENDPOINT_ID", "")
+                        putExtra("PEER_NAME", "Global World")
+                        putExtra("MY_NAME", etNickname.text.toString().ifEmpty { "User" })
+                        putExtra("ROUTE", "GLOBAL")
+                    }
+                    startActivity(intent)
+                    true
+                }
+                else -> false
+            }
+        }
+
+        lifecycleScope.launch {
+            NetworkManager.networkState.collect { state ->
+                updateStatusBanner()
+            }
+        }
+        
+        checkPermissionsAndHops {}
+    }
+
+    private fun showQrProfile() {
+        saveNickname()
+        try {
+            val json = JSONObject()
+            json.put("nickname", myNickname)
+            json.put("publicKey", MeshCrypto.getMyPublicKeyString())
+            
+            val barcodeEncoder = BarcodeEncoder()
+            val bitmap = barcodeEncoder.encodeBitmap(json.toString(), BarcodeFormat.QR_CODE, 600, 600)
+            
+            val iv = ImageView(this).apply {
+                setImageBitmap(bitmap)
+                setPadding(32, 32, 32, 32)
+            }
+            
+            AlertDialog.Builder(this)
+                .setTitle("Your Secure Profile")
+                .setView(iv)
+                .setPositiveButton("Close", null)
+                .show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleScannedQr(contents: String) {
+        try {
+            val json = JSONObject(contents)
+            val peerNick = json.optString("nickname")
+            val peerPubKey = json.optString("publicKey")
+            
+            if (peerNick.isNotEmpty() && peerPubKey.isNotEmpty()) {
+                Toast.makeText(this, "Profile extracted & trusted: $peerNick", Toast.LENGTH_SHORT).show()
+                // Eagerly launch search or advertise to auto-match this profile
+                if (!isDiscovering) {
+                    checkPermissionsAndHops { startDiscovery() }
+                }
+            } else {
+                Toast.makeText(this, "Invalid MeshChat QR", Toast.LENGTH_SHORT).show()
+            }
+        } catch(e: Exception) {
+            Toast.makeText(this, "Invalid Format", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun updateStatusBanner() {
+        val isGlobal = NetworkManager.networkState.value == NetworkManager.NetworkState.GLOBAL_ONLINE
+        if (isGlobal) {
+            tvStatusBanner.text = "Status: Global Mesh Active"
+            tvStatusBanner.setTextColor(Color.parseColor("#00F0FF")) // Cyan
+        } else {
+            tvStatusBanner.text = "Status: Local Offline Mesh"
+            tvStatusBanner.setTextColor(Color.parseColor("#9D4EDD")) // Purple
+        }
+        
+        var appStr = ""
+        if (isAdvertising) appStr += " | Advertising"
+        if (isDiscovering) appStr += " | Discovering"
+        tvStatusBanner.text = tvStatusBanner.text.toString() + appStr
     }
 
     private fun checkPermissionsAndHops(onSuccess: () -> Unit) {
@@ -95,7 +239,11 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.ACCESS_WIFI_STATE,
             Manifest.permission.CHANGE_WIFI_STATE,
             Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.INTERNET,
+            Manifest.permission.ACCESS_NETWORK_STATE,
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -125,31 +273,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getNickname(): String {
-        val name = etNickname.text.toString().trim()
-        return if (name.isNotEmpty()) name else Build.MODEL
+    private fun saveNickname() {
+        myNickname = etNickname.text.toString().trim()
+        if (myNickname.isEmpty()) myNickname = Build.MODEL
+        MeshStorage.saveNickname(myNickname)
     }
 
     private fun startAdvertising() {
-        myNickname = getNickname()
+        saveNickname()
         val options = AdvertisingOptions.Builder().setStrategy(STRATEGY).build()
         Nearby.getConnectionsClient(this)
             .startAdvertising(myNickname, SERVICE_ID, connectionLifecycleCallback, options)
             .addOnSuccessListener {
                 isAdvertising = true
-                tvState.text = "Advertising as $myNickname..."
                 btnAdvertise.text = "Stop Advertising"
+                updateStatusBanner()
             }
             .addOnFailureListener { e ->
-                tvState.text = "Advertising Failed: \${e.message}"
+                Toast.makeText(this,"Adv Failed", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun stopAdvertising() {
         Nearby.getConnectionsClient(this).stopAdvertising()
         isAdvertising = false
-        tvState.text = getString(R.string.offline)
         btnAdvertise.text = "Start Advertising"
+        updateStatusBanner()
     }
 
     private fun startDiscovery() {
@@ -161,91 +310,96 @@ class MainActivity : AppCompatActivity() {
             .startDiscovery(SERVICE_ID, endpointDiscoveryCallback, options)
             .addOnSuccessListener {
                 isDiscovering = true
-                tvState.text = getString(R.string.searching)
                 btnDiscover.text = "Stop Discovery"
+                updateStatusBanner()
             }
             .addOnFailureListener { e ->
-                tvState.text = "Discovery Failed: \${e.message}"
+                Toast.makeText(this,"Disc Failed", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun stopDiscovery() {
         Nearby.getConnectionsClient(this).stopDiscovery()
         isDiscovering = false
-        tvState.text = getString(R.string.offline)
         btnDiscover.text = "Start Discovery"
+        updateStatusBanner()
     }
 
     private fun connectToEndpoint(endpointId: String) {
-        myNickname = getNickname()
+        saveNickname()
         Nearby.getConnectionsClient(this).requestConnection(myNickname, endpointId, connectionLifecycleCallback)
             .addOnSuccessListener {
-                tvState.text = "Requesting connection..."
+                Toast.makeText(this, "Connecting...", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Connection request failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show()
             }
     }
 
     private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-            discoveredDevices.add(Pair(endpointId, info.endpointName))
-            deviceAdapter.notifyItemInserted(discoveredDevices.size - 1)
+            runOnUiThread {
+                val exists = discoveredDevices.any { it.first == endpointId }
+                if (!exists) {
+                    discoveredDevices.add(Pair(endpointId, info.endpointName))
+                    deviceAdapter.notifyItemInserted(discoveredDevices.size - 1)
+                }
+            }
         }
 
         override fun onEndpointLost(endpointId: String) {
-            val index = discoveredDevices.indexOfFirst { it.first == endpointId }
-            if (index != -1) {
-                discoveredDevices.removeAt(index)
-                deviceAdapter.notifyItemRemoved(index)
+            runOnUiThread {
+                val index = discoveredDevices.indexOfFirst { it.first == endpointId }
+                if (index != -1) {
+                    discoveredDevices.removeAt(index)
+                    deviceAdapter.notifyItemRemoved(index)
+                }
             }
         }
     }
 
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
-            // Automatically accept connection for P2P mesh logic requirement
-            Nearby.getConnectionsClient(this@MainActivity).acceptConnection(endpointId, payloadCallback)
+            // Auto accept
+            Nearby.getConnectionsClient(this@MainActivity).acceptConnection(endpointId, PayloadCallbackHelper)
         }
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
-            when (result.status.statusCode) {
-                ConnectionsStatusCodes.STATUS_OK -> {
-                    tvState.text = getString(R.string.connected)
-                    stopDiscovery()
-                    stopAdvertising()
-                    // Launch ChatActivity
-                    val intent = Intent(this@MainActivity, ChatActivity::class.java).apply {
-                        putExtra("ENDPOINT_ID", endpointId)
-                        // Assuming peerName is available from cached discovery list, or simply call it Peer
-                        val peerName = discoveredDevices.find { it.first == endpointId }?.second ?: "Connected Peer"
-                        putExtra("PEER_NAME", peerName)
-                        putExtra("MY_NAME", myNickname)
+            runOnUiThread {
+                when (result.status.statusCode) {
+                    ConnectionsStatusCodes.STATUS_OK -> {
+                        stopDiscovery()
+                        stopAdvertising()
+                        val peerName = discoveredDevices.find { it.first == endpointId }?.second ?: "Peer"
+                        MeshStorage.saveRecentPeer(endpointId, peerName)
+                        
+                        val intent = Intent(this@MainActivity, ChatActivity::class.java).apply {
+                            putExtra("ENDPOINT_ID", endpointId)
+                            putExtra("PEER_NAME", peerName)
+                            putExtra("MY_NAME", myNickname)
+                            putExtra("ROUTE", "LOCAL")
+                        }
+                        startActivity(intent)
                     }
-                    startActivity(intent)
-                }
-                ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
-                    tvState.text = "Connection Rejected"
-                }
-                ConnectionsStatusCodes.STATUS_ERROR -> {
-                    tvState.text = "Connection Error"
+                    else -> {
+                        Toast.makeText(this@MainActivity, "Connection Rejected/Error", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
 
         override fun onDisconnected(endpointId: String) {
-            tvState.text = getString(R.string.offline)
             Toast.makeText(this@MainActivity, "Disconnected", Toast.LENGTH_SHORT).show()
         }
     }
+}
 
-    private val payloadCallback = object : PayloadCallback() {
-        override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            ChatActivity.receivePayload(payload)
-        }
+object PayloadCallbackHelper : PayloadCallback() {
+    override fun onPayloadReceived(endpointId: String, payload: Payload) {
+        ChatActivity.activeInstance?.handleIncomingPayload(payload)
+    }
 
-        override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
-            ChatActivity.receivePayloadUpdate(update)
-        }
+    override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
+        ChatActivity.activeInstance?.handlePayloadUpdate(update)
     }
 }
