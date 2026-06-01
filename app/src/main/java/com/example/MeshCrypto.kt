@@ -79,6 +79,29 @@ object MeshCrypto {
         return String(cipher.doFinal(cipherText))
     }
 
+    fun sign(data: String): String {
+        init()
+        val signature = java.security.Signature.getInstance("SHA256withECDSA")
+        signature.initSign(myKeyPair!!.private)
+        signature.update(data.toByteArray())
+        return Base64.encodeToString(signature.sign(), Base64.NO_WRAP)
+    }
+
+    fun verify(data: String, signatureStr: String, pubKeyStr: String): Boolean {
+        return try {
+            val pubKeyBytes = Base64.decode(pubKeyStr, Base64.NO_WRAP)
+            val keyFactory = KeyFactory.getInstance(EC_ALGORITHM)
+            val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(pubKeyBytes))
+            
+            val signature = java.security.Signature.getInstance("SHA256withECDSA")
+            signature.initVerify(publicKey)
+            signature.update(data.toByteArray())
+            signature.verify(Base64.decode(signatureStr, Base64.NO_WRAP))
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     private fun deriveKey(privateKey: PrivateKey, peerPublicKeyStr: String): SecretKeySpec {
         val pubKeyBytes = Base64.decode(peerPublicKeyStr, Base64.NO_WRAP)
         val keyFactory = KeyFactory.getInstance(EC_ALGORITHM)

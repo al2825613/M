@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">شات الشبكة برو</string>
+    <string name="offline">غير متصل</string>
+    <string name="searching">جاري البحث عن أجهزة اتصال...</string>
+    <string name="connected">متصل</string>
+    <string name="disconnect">قطع الاتصال</string>
+    <string name="type_message">اكتب رسالة...</string>
+    <string name="nav_discover">اكتشاف</string>
+    <string name="nav_chats">المحادثات</string>
+    <string name="nav_global">العالم</string>
+    <string name="status_local_offline">الحالة: شبكة محلية غير متصلة</string>
+    <string name="custom_nickname">اسم مستعار مخصص</string>
+    <string name="advertise">إعلان</string>
+    <string name="discover">اكتشاف</string>
+    <string name="show_qr_profile">عرض رمز الاستجابة للبروفايل</string>
+    <string name="scan_qr_profile">مسح رمز البروفايل</string>
+    <string name="recent_peers">الأجهزة المتصلة مؤخرا</string>
+    <string name="discovered_devices">الأجهزة المكتشفة</string>
+    <string name="global_chat_feature">ميزة المحادثة العالمية</string>
+</resources>

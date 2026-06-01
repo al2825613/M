@@ -24,8 +24,8 @@ object NetworkManager {
 
     private const val GLOBAL_RELAY_URL = "ws://codeza.dev:8080"
 
-    private val _incomingMessages = MutableStateFlow<String?>(null)
-    val incomingMessages: StateFlow<String?> = _incomingMessages
+    private val _incomingMessages = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 10, onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST)
+    val incomingMessages: kotlinx.coroutines.flow.SharedFlow<String> = _incomingMessages
 
     private var isInitialized = false
 
@@ -69,7 +69,7 @@ object NetworkManager {
         val request = Request.Builder().url(GLOBAL_RELAY_URL).build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onMessage(webSocket: WebSocket, text: String) {
-                _incomingMessages.value = text
+                _incomingMessages.tryEmit(text)
             }
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 this@NetworkManager.webSocket = null

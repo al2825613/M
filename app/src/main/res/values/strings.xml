@@ -1,8 +1,20 @@
 <resources>
-    <string name="app_name">MeshChat</string>
+    <string name="app_name">MeshChat Pro</string>
     <string name="offline">Offline</string>
     <string name="searching">Searching for peers...</string>
     <string name="connected">Connected</string>
     <string name="disconnect">Disconnect</string>
     <string name="type_message">Type a message...</string>
+    <string name="nav_discover">Discover</string>
+    <string name="nav_chats">Active Chats</string>
+    <string name="nav_global">Global World</string>
+    <string name="status_local_offline">Status: Local Offline Mesh</string>
+    <string name="custom_nickname">Custom Nickname</string>
+    <string name="advertise">Advertise</string>
+    <string name="discover">Discover</string>
+    <string name="show_qr_profile">Show QR Profile</string>
+    <string name="scan_qr_profile">Scan QR Profile</string>
+    <string name="recent_peers">Recent Peers</string>
+    <string name="discovered_devices">Discovered Devices</string>
+    <string name="global_chat_feature">Global World Chat Feature</string>
 </resources>

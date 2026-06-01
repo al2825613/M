@@ -69,8 +69,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        try {
+            val crash = MeshStorage.getCrash()
+            if (crash != null) {
+                MeshStorage.clearCrash()
+                tvStatusBanner.text = "LAST CRASH: $crash"
+                tvStatusBanner.setTextColor(Color.RED)
+            }
+        } catch (e: Exception) {}
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val oldHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            MeshStorage.init(this) // just in case
+            MeshStorage.saveCrash(android.util.Log.getStackTraceString(throwable))
+            oldHandler?.uncaughtException(thread, throwable)
+        }
         
         setContentView(R.layout.activity_main)
 

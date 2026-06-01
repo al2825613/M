@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="12dp"
-            android:text="Status: Local Offline Mesh"
+            android:text="@string/status_local_offline"
             android:textStyle="bold"
             android:textColor="@color/cyber_secondary"
             android:gravity="center"/>
@@ -41,7 +41,7 @@
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="MeshChat Pro"
+        android:text="@string/app_name"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@color/cyber_primary"
@@ -65,7 +65,7 @@
             android:id="@+id/etNickname"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Custom Nickname"
+            android:hint="@string/custom_nickname"
             android:textColor="@color/cyber_text"/>
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -84,7 +84,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Advertise"
+            android:text="@string/advertise"
             android:layout_marginEnd="8dp"
             app:backgroundTint="@color/cyber_primary"
             android:textColor="@color/black" />
@@ -94,7 +94,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Discover"
+            android:text="@string/discover"
             android:layout_marginStart="8dp"
             app:backgroundTint="@color/cyber_secondary"
             android:textColor="@color/white" />
@@ -115,7 +115,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Show QR Profile"
+                android:text="@string/show_qr_profile"
                 android:layout_marginEnd="8dp"
                 app:backgroundTint="#2E2E2E"
                 android:textColor="@color/cyber_primary" />
@@ -125,7 +125,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Scan QR Profile"
+                android:text="@string/scan_qr_profile"
                 android:layout_marginStart="8dp"
                 app:backgroundTint="#2E2E2E"
                 android:textColor="@color/cyber_secondary" />
@@ -149,7 +149,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Recent Peers"
+                android:text="@string/recent_peers"
                 android:textColor="@color/cyber_primary"
                 android:textStyle="bold"/>
             
@@ -165,7 +165,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Discovered Devices"
+                android:text="@string/discovered_devices"
                 android:textColor="@color/cyber_primary"
                 android:textStyle="bold"/>
 
@@ -187,7 +187,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Global World Chat Feature"
+                android:text="@string/global_chat_feature"
                 android:textColor="@color/cyber_text"
                 android:textAlignment="center"/>
         </LinearLayout>

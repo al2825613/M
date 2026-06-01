@@ -24,7 +24,17 @@
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/switchSecret" />
+
+        <TextView
+            android:id="@+id/tvFingerprint"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Fingerprint: pending..."
+            android:textColor="@color/cyber_secondary"
+            android:textSize="12sp"
+            app:layout_constraintTop_toBottomOf="@id/tvPeerName"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/switchSecret" />
 

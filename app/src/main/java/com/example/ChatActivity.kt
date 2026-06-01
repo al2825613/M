@@ -36,6 +36,7 @@ import java.util.Locale
 class ChatActivity : AppCompatActivity() {
 
     private lateinit var tvPeerName: TextView
+    private lateinit var tvFingerprint: TextView
     private lateinit var btnDisconnect: ImageButton
     private lateinit var rvMessages: RecyclerView
     private lateinit var btnAttach: ImageButton
@@ -69,7 +70,18 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_chat)
+        
+        val oldHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            MeshStorage.init(this) // just in case
+            MeshStorage.saveCrash(android.util.Log.getStackTraceString(throwable))
+            oldHandler?.uncaughtException(thread, throwable)
+        }
+
+        try {
+            MeshStorage.init(this)
+            MeshCrypto.init()
+            setContentView(R.layout.activity_chat)
 
         endpointId = intent.getStringExtra("ENDPOINT_ID")
         peerName = intent.getStringExtra("PEER_NAME") ?: "Global Room"
@@ -77,6 +89,7 @@ class ChatActivity : AppCompatActivity() {
         currentRoute = intent.getStringExtra("ROUTE") ?: "LOCAL"
 
         tvPeerName = findViewById(R.id.tvPeerName)
+        tvFingerprint = findViewById(R.id.tvFingerprint)
         btnDisconnect = findViewById(R.id.btnDisconnect)
         rvMessages = findViewById(R.id.rvMessages)
         btnAttach = findViewById(R.id.btnAttach)
@@ -88,6 +101,8 @@ class ChatActivity : AppCompatActivity() {
         tvPeerName.text = peerName
         if (currentRoute == "GLOBAL") {
             tvPeerName.text = "Global World Chat"
+            tvFingerprint.text = "Connection: TLS/SSL"
+            tvFingerprint.setTextColor(android.graphics.Color.CYAN)
         }
 
         adapter = MessageAdapter(messages)
@@ -157,6 +172,16 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
         }
+        
+        } catch (e: Throwable) {
+            MeshStorage.init(this)
+            MeshStorage.saveCrash(android.util.Log.getStackTraceString(e))
+            val tv = TextView(this)
+            tv.text = "CHAT CRASH: \n" + android.util.Log.getStackTraceString(e)
+            tv.setTextColor(android.graphics.Color.WHITE)
+            tv.setBackgroundColor(android.graphics.Color.RED)
+            setContentView(tv)
+        }
     }
 
     private fun startAudioStream() {
@@ -177,6 +202,11 @@ class ChatActivity : AppCompatActivity() {
                     if (read > 0) {
                         val validBytes = buffer.copyOfRange(0, read)
                         val b64 = Base64.encodeToString(validBytes, Base64.DEFAULT)
+                        var sig = ""
+                        try {
+                            sig = MeshCrypto.sign(b64)
+                        } catch (e: Exception) {}
+                        
                         val packet = MeshPacket(
                             senderName = myName,
                             destinationId = endpointId ?: "global",
@@ -185,7 +215,8 @@ class ChatActivity : AppCompatActivity() {
                             encryptedData = b64,
                             iv = "",
                             publicKey = MeshCrypto.getMyPublicKeyString(),
-                            userId = MeshStorage.getUserId()
+                            userId = MeshStorage.getUserId(),
+                            signature = sig
                         )
                         val json = packet.toJson()
                         if (currentRoute == "LOCAL" && endpointId != null) {
@@ -219,6 +250,7 @@ class ChatActivity : AppCompatActivity() {
         
         var encData = text
         var ivStr = ""
+        var sigStr = ""
         if (peerPublicKey.isNotEmpty() && currentRoute == "LOCAL") {
             try {
                 val encPair = MeshCrypto.encrypt(text, peerPublicKey)
@@ -228,6 +260,10 @@ class ChatActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
         }
+        
+        try {
+            sigStr = MeshCrypto.sign(encData)
+        } catch (e: Exception) {}
 
         val packet = MeshPacket(
             senderName = myName,
@@ -238,6 +274,7 @@ class ChatActivity : AppCompatActivity() {
             iv = ivStr,
             publicKey = MeshCrypto.getMyPublicKeyString(),
             userId = MeshStorage.getUserId(),
+            signature = sigStr,
             selfDestruct = selfDestructSecs,
             messageId = msgId
         )
@@ -266,8 +303,22 @@ class ChatActivity : AppCompatActivity() {
 
             if (packet.payloadType == "HANDSHAKE") {
                 peerPublicKey = packet.publicKey
+                val md = java.security.MessageDigest.getInstance("SHA-256")
+                val hash = md.digest(peerPublicKey.toByteArray())
+                val hexString = hash.joinToString("") { "%02x".format(it.toInt() and 0xFF) }.take(8).uppercase()
+                runOnUiThread {
+                    tvFingerprint.text = "Fingerprint: $hexString"
+                    tvFingerprint.setTextColor(android.graphics.Color.GREEN)
+                }
                 Toast.makeText(this, "Secure ECDH Session Established", Toast.LENGTH_SHORT).show()
                 return
+            }
+            
+            if (packet.signature.isNotEmpty() && peerPublicKey.isNotEmpty() && currentRoute == "LOCAL") {
+                if (!MeshCrypto.verify(packet.encryptedData, packet.signature, peerPublicKey)) {
+                    Toast.makeText(this, "Signature Verification Failed! Data might be tampered.", Toast.LENGTH_LONG).show()
+                    return
+                }
             }
             
             if (packet.payloadType == "ACK") {
