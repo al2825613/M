@@ -2,10 +2,12 @@ package com.example
 
 import android.util.Base64
 import java.security.KeyFactory
+import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.SecureRandom
+import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
@@ -18,16 +20,34 @@ object MeshCrypto {
     private const val TAG_LENGTH_BIT = 128
     private const val IV_LENGTH_BYTE = 12
 
-    private var myKeyPair: java.security.KeyPair? = null
+    private var myKeyPair: KeyPair? = null
 
     fun init() {
         if (myKeyPair != null) return
         try {
+            val savedKeys = MeshStorage.getKeyPair()
+            if (savedKeys != null) {
+                val keyFactory = KeyFactory.getInstance(EC_ALGORITHM)
+                val privBytes = Base64.decode(savedKeys.first, Base64.NO_WRAP)
+                val pubBytes = Base64.decode(savedKeys.second, Base64.NO_WRAP)
+                val privateKey = keyFactory.generatePrivate(PKCS8EncodedKeySpec(privBytes))
+                val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(pubBytes))
+                myKeyPair = KeyPair(publicKey, privateKey)
+            } else {
+                val kpg = KeyPairGenerator.getInstance(EC_ALGORITHM)
+                kpg.initialize(256)
+                myKeyPair = kpg.generateKeyPair()
+                
+                val privStr = Base64.encodeToString(myKeyPair!!.private.encoded, Base64.NO_WRAP)
+                val pubStr = Base64.encodeToString(myKeyPair!!.public.encoded, Base64.NO_WRAP)
+                MeshStorage.saveKeyPair(privStr, pubStr)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Fallback just in case
             val kpg = KeyPairGenerator.getInstance(EC_ALGORITHM)
             kpg.initialize(256)
             myKeyPair = kpg.generateKeyPair()
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 

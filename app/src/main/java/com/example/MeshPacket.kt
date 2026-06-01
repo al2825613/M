@@ -10,6 +10,7 @@ data class MeshPacket(
     val encryptedData: String,
     val iv: String,
     val publicKey: String = "",
+    val userId: String = "",
     val selfDestruct: Long = 0L, // time in seconds (e.g. 10), 0 means no self-destruct
     val messageId: String = java.util.UUID.randomUUID().toString() // For ACKs
 ) {
@@ -22,6 +23,7 @@ data class MeshPacket(
         json.put("encryptedData", encryptedData)
         json.put("iv", iv)
         json.put("publicKey", publicKey)
+        json.put("userId", userId)
         json.put("selfDestruct", selfDestruct)
         json.put("messageId", messageId)
         return json.toString()
@@ -38,6 +40,7 @@ data class MeshPacket(
                 json.optString("encryptedData", ""),
                 json.optString("iv", ""),
                 json.optString("publicKey", ""),
+                json.optString("userId", ""),
                 json.optLong("selfDestruct", 0L),
                 json.optString("messageId", "")
             )

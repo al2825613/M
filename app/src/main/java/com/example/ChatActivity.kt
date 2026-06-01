@@ -143,7 +143,8 @@ class ChatActivity : AppCompatActivity() {
                 payloadType = "HANDSHAKE",
                 encryptedData = "",
                 iv = "",
-                publicKey = MeshCrypto.getMyPublicKeyString()
+                publicKey = MeshCrypto.getMyPublicKeyString(),
+                userId = MeshStorage.getUserId()
             )
             val p = Payload.fromBytes(handshake.toJson().toByteArray())
             Nearby.getConnectionsClient(this).sendPayload(endpointId!!, p)
@@ -182,7 +183,9 @@ class ChatActivity : AppCompatActivity() {
                             routeType = currentRoute,
                             payloadType = "VOICE",
                             encryptedData = b64,
-                            iv = ""
+                            iv = "",
+                            publicKey = MeshCrypto.getMyPublicKeyString(),
+                            userId = MeshStorage.getUserId()
                         )
                         val json = packet.toJson()
                         if (currentRoute == "LOCAL" && endpointId != null) {
@@ -233,6 +236,8 @@ class ChatActivity : AppCompatActivity() {
             payloadType = "TEXT",
             encryptedData = encData,
             iv = ivStr,
+            publicKey = MeshCrypto.getMyPublicKeyString(),
+            userId = MeshStorage.getUserId(),
             selfDestruct = selfDestructSecs,
             messageId = msgId
         )
@@ -257,7 +262,7 @@ class ChatActivity : AppCompatActivity() {
         try {
             val packet = MeshPacket.fromJson(json)
             
-            if (packet.senderName == myName && currentRoute == "GLOBAL") return
+            if (packet.publicKey == MeshCrypto.getMyPublicKeyString() && currentRoute == "GLOBAL") return
 
             if (packet.payloadType == "HANDSHAKE") {
                 peerPublicKey = packet.publicKey
@@ -307,14 +312,19 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
             
-            val msgModel = MessageModel(id = packet.messageId, text = decrypted, type = MessageModel.TYPE_TEXT, senderName = packet.senderName, timestamp = getTime(), isMine = false, selfDestruct = packet.selfDestruct, status = MessageModel.STATUS_DECRYPTED)
+            val displaySenderName = if (packet.userId.isNotEmpty()) {
+                "${packet.senderName} (${packet.userId.take(4)})"
+            } else {
+                packet.senderName
+            }
+            
+            val msgModel = MessageModel(id = packet.messageId, text = decrypted, type = MessageModel.TYPE_TEXT, senderName = displaySenderName, timestamp = getTime(), isMine = false, selfDestruct = packet.selfDestruct, status = MessageModel.STATUS_DECRYPTED)
             addMessage(msgModel)
             
             if (packet.selfDestruct > 0) {
                 scheduleDestruction(msgModel, packet.selfDestruct)
             }
             
-            // Send ACK Back if TEXT
             if (packet.payloadType == "TEXT") {
                 val ackPacket = MeshPacket(
                     senderName = myName,
@@ -323,6 +333,7 @@ class ChatActivity : AppCompatActivity() {
                     payloadType = "ACK",
                     encryptedData = "",
                     iv = "",
+                    userId = MeshStorage.getUserId(),
                     messageId = packet.messageId
                 )
                 val ackJson = ackPacket.toJson()

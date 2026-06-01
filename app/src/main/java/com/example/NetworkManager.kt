@@ -22,7 +22,7 @@ object NetworkManager {
     private var webSocket: WebSocket? = null
     private val client = OkHttpClient()
 
-    private const val GLOBAL_RELAY_URL = "wss://echo.websocket.events" // Echo test relay for P2P sim
+    private const val GLOBAL_RELAY_URL = "wss://codeza.dev:8080"
 
     private val _incomingMessages = MutableStateFlow<String?>(null)
     val incomingMessages: StateFlow<String?> = _incomingMessages

@@ -175,6 +175,8 @@ class MainActivity : AppCompatActivity() {
         saveNickname()
         try {
             val json = JSONObject()
+            val userId = MeshStorage.getUserId()
+            json.put("userId", userId)
             json.put("nickname", myNickname)
             json.put("publicKey", MeshCrypto.getMyPublicKeyString())
             
@@ -183,12 +185,27 @@ class MainActivity : AppCompatActivity() {
             
             val iv = ImageView(this).apply {
                 setImageBitmap(bitmap)
-                setPadding(32, 32, 32, 32)
+                setPadding(32, 16, 32, 32)
+            }
+            
+            val tvId = TextView(this).apply {
+                text = "ID: ${userId.take(8).uppercase()}"
+                gravity = android.view.Gravity.CENTER
+                textSize = 18f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setPadding(0, 32, 0, 0)
+                setTextColor(Color.WHITE)
+            }
+
+            val layout = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                addView(tvId)
+                addView(iv)
             }
             
             AlertDialog.Builder(this)
                 .setTitle("Your Secure Profile")
-                .setView(iv)
+                .setView(layout)
                 .setPositiveButton("Close", null)
                 .show()
         } catch (e: Exception) {
@@ -201,9 +218,11 @@ class MainActivity : AppCompatActivity() {
             val json = JSONObject(contents)
             val peerNick = json.optString("nickname")
             val peerPubKey = json.optString("publicKey")
+            val peerId = json.optString("userId")
             
             if (peerNick.isNotEmpty() && peerPubKey.isNotEmpty()) {
-                Toast.makeText(this, "Profile extracted & trusted: $peerNick", Toast.LENGTH_SHORT).show()
+                val displayNick = if (peerId.isNotEmpty()) "$peerNick (${peerId.take(4)})" else peerNick
+                Toast.makeText(this, "Profile trusted: $displayNick", Toast.LENGTH_SHORT).show()
                 // Eagerly launch search or advertise to auto-match this profile
                 if (!isDiscovering) {
                     checkPermissionsAndHops { startDiscovery() }
