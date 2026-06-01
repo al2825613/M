@@ -71,6 +71,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
         setContentView(R.layout.activity_main)
 
         // Init Core Managers
@@ -79,96 +80,96 @@ class MainActivity : AppCompatActivity() {
         NetworkManager.init(this)
 
         etNickname = findViewById(R.id.etNickname)
-        btnAdvertise = findViewById(R.id.btnAdvertise)
-        btnDiscover = findViewById(R.id.btnDiscover)
-        btnShowQr = findViewById(R.id.btnShowQr)
-        btnScanQr = findViewById(R.id.btnScanQr)
-        tvStatusBanner = findViewById(R.id.tvStatusBanner)
-        rvDevices = findViewById(R.id.rvDevices)
-        rvRecentPeers = findViewById(R.id.rvRecentPeers)
-        bottomNavigation = findViewById(R.id.bottomNavigation)
-        viewDiscover = findViewById(R.id.viewDiscover)
-        viewGlobal = findViewById(R.id.viewGlobal)
+            btnAdvertise = findViewById(R.id.btnAdvertise)
+            btnDiscover = findViewById(R.id.btnDiscover)
+            btnShowQr = findViewById(R.id.btnShowQr)
+            btnScanQr = findViewById(R.id.btnScanQr)
+            tvStatusBanner = findViewById(R.id.tvStatusBanner)
+            rvDevices = findViewById(R.id.rvDevices)
+            rvRecentPeers = findViewById(R.id.rvRecentPeers)
+            bottomNavigation = findViewById(R.id.bottomNavigation)
+            viewDiscover = findViewById(R.id.viewDiscover)
+            viewGlobal = findViewById(R.id.viewGlobal)
 
-        etNickname.setText(MeshStorage.getNickname())
+            etNickname.setText(MeshStorage.getNickname())
 
-        deviceAdapter = DeviceAdapter(discoveredDevices) { endpointId ->
-            connectToEndpoint(endpointId)
-        }
-        rvDevices.layoutManager = LinearLayoutManager(this)
-        rvDevices.adapter = deviceAdapter
-
-        val recentPeers = MeshStorage.getRecentPeers()
-        recentPeerAdapter = RecentPeerAdapter(recentPeers) { endpointId, _ ->
-            connectToEndpoint(endpointId)
-        }
-        rvRecentPeers.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        rvRecentPeers.adapter = recentPeerAdapter
-
-        btnAdvertise.setOnClickListener {
-            if (!isAdvertising) {
-                checkPermissionsAndHops { startAdvertising() }
-            } else {
-                stopAdvertising()
+            deviceAdapter = DeviceAdapter(discoveredDevices) { endpointId ->
+                connectToEndpoint(endpointId)
             }
-        }
+            rvDevices.layoutManager = LinearLayoutManager(this)
+            rvDevices.adapter = deviceAdapter
 
-        btnDiscover.setOnClickListener {
-            if (!isDiscovering) {
-                checkPermissionsAndHops { startDiscovery() }
-            } else {
-                stopDiscovery()
+            val recentPeers = MeshStorage.getRecentPeers()
+            recentPeerAdapter = RecentPeerAdapter(recentPeers) { endpointId, _ ->
+                connectToEndpoint(endpointId)
             }
-        }
+            rvRecentPeers.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+            rvRecentPeers.adapter = recentPeerAdapter
 
-        btnShowQr.setOnClickListener {
-            showQrProfile()
-        }
-
-        btnScanQr.setOnClickListener {
-            val options = ScanOptions()
-            options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-            options.setPrompt("Scan Peer's MeshChat Profile UI")
-            options.setCameraId(0) // Use specific camera
-            options.setBeepEnabled(false)
-            qrScanLauncher.launch(options)
-        }
-
-        bottomNavigation.setOnItemSelectedListener { item ->
-            when(item.itemId) {
-                R.id.nav_discover -> {
-                    viewDiscover.visibility = android.view.View.VISIBLE
-                    viewGlobal.visibility = android.view.View.GONE
-                    true
+            btnAdvertise.setOnClickListener {
+                if (!isAdvertising) {
+                    checkPermissionsAndHops { startAdvertising() }
+                } else {
+                    stopAdvertising()
                 }
-                R.id.nav_chats -> {
-                    Toast.makeText(this, "Active Chats coming soon", Toast.LENGTH_SHORT).show()
-                    false
+            }
+
+            btnDiscover.setOnClickListener {
+                if (!isDiscovering) {
+                    checkPermissionsAndHops { startDiscovery() }
+                } else {
+                    stopDiscovery()
                 }
-                R.id.nav_global -> {
-                    viewDiscover.visibility = android.view.View.GONE
-                    viewGlobal.visibility = android.view.View.VISIBLE
-                    // Launch a global room as an example
-                    val intent = Intent(this@MainActivity, ChatActivity::class.java).apply {
-                        putExtra("ENDPOINT_ID", "")
-                        putExtra("PEER_NAME", "Global World")
-                        putExtra("MY_NAME", etNickname.text.toString().ifEmpty { "User" })
-                        putExtra("ROUTE", "GLOBAL")
+            }
+
+            btnShowQr.setOnClickListener {
+                showQrProfile()
+            }
+
+            btnScanQr.setOnClickListener {
+                val options = ScanOptions()
+                options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                options.setPrompt("Scan Peer's MeshChat Profile UI")
+                options.setCameraId(0) // Use specific camera
+                options.setBeepEnabled(false)
+                qrScanLauncher.launch(options)
+            }
+
+            bottomNavigation.setOnItemSelectedListener { item ->
+                when(item.itemId) {
+                    R.id.nav_discover -> {
+                        viewDiscover.visibility = android.view.View.VISIBLE
+                        viewGlobal.visibility = android.view.View.GONE
+                        true
                     }
-                    startActivity(intent)
-                    true
+                    R.id.nav_chats -> {
+                        Toast.makeText(this, "Active Chats coming soon", Toast.LENGTH_SHORT).show()
+                        false
+                    }
+                    R.id.nav_global -> {
+                        viewDiscover.visibility = android.view.View.GONE
+                        viewGlobal.visibility = android.view.View.VISIBLE
+                        // Launch a global room as an example
+                        val intent = Intent(this@MainActivity, ChatActivity::class.java).apply {
+                            putExtra("ENDPOINT_ID", "")
+                            putExtra("PEER_NAME", "Global World")
+                            putExtra("MY_NAME", etNickname.text.toString().ifEmpty { "User" })
+                            putExtra("ROUTE", "GLOBAL")
+                        }
+                        startActivity(intent)
+                        true
+                    }
+                    else -> false
                 }
-                else -> false
             }
-        }
 
-        lifecycleScope.launch {
-            NetworkManager.networkState.collect { state ->
-                updateStatusBanner()
+            lifecycleScope.launch {
+                NetworkManager.networkState.collect { state ->
+                    runOnUiThread { updateStatusBanner() }
+                }
             }
-        }
-        
-        checkPermissionsAndHops {}
+            
+            checkPermissionsAndHops {}
     }
 
     private fun showQrProfile() {

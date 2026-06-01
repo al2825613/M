@@ -153,7 +153,7 @@ class ChatActivity : AppCompatActivity() {
         lifecycleScope.launch {
             NetworkManager.incomingMessages.collect { msg ->
                 if (msg != null && currentRoute == "GLOBAL") {
-                    handleIncomingPacketJson(msg)
+                    runOnUiThread { handleIncomingPacketJson(msg) }
                 }
             }
         }
@@ -361,7 +361,7 @@ class ChatActivity : AppCompatActivity() {
     fun handleIncomingPayload(payload: Payload) {
         if (payload.type == Payload.Type.BYTES) {
             val bytes = payload.asBytes() ?: return
-            handleIncomingPacketJson(String(bytes))
+            runOnUiThread { handleIncomingPacketJson(String(bytes)) }
         } else if (payload.type == Payload.Type.FILE) {
             incomingFilePayloads[payload.id] = payload
         }

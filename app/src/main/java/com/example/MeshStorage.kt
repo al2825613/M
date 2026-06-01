@@ -45,6 +45,18 @@ object MeshStorage {
         prefs.edit().putString(KEY_NICKNAME, name).apply()
     }
 
+    fun saveCrash(trace: String) {
+        prefs.edit().putString("last_crash", trace).commit()
+    }
+
+    fun getCrash(): String? {
+        return prefs.getString("last_crash", null)
+    }
+
+    fun clearCrash() {
+        prefs.edit().remove("last_crash").apply()
+    }
+
     fun getNickname(): String {
         return prefs.getString(KEY_NICKNAME, "User") ?: "User"
     }
